@@ -8,6 +8,8 @@ You can also reach us on our [Forums](https://forums.percona.com) and [Discord](
 
 Before submitting code or documentation contributions, you should first complete the following prerequisites.
 
+- [Node.js 16.19.0](https://nodejs.org/download/release/v16.19.0/) (tested) - v17 and v18 unacceptable for now
+
 ### Sign the CLA
 
 Before you can contribute, we kindly ask you to sign our [Contributor License Agreement](https://cla-assistant.percona.com/percona/grafana-dashboards) (CLA). You can do this using your GitHub account and one click.
@@ -40,17 +42,18 @@ That environment bundles a number of tools to help you populate the panels with 
 
 ```
 cd pmm-app
+yarn install
 docker-compose up -d
-npm run dev
+yarn run dev
 ```
 
-For a much simpler development environment you could create a local file `docker-compose.local.yml` inside of `pmm-app` folder:
+For a much simpler development environment you could create a local file `docker-compose.local.yaml` inside of `pmm-app` folder:
 
-```yml
+```yaml
 version: "3"
 services:
   pmm-server:
-    container_name: pmm-server
+    container_name: pmm-server-percona
     image: percona/pmm-server:2
     environment:
       - ENABLE_DBAAS=1
@@ -58,20 +61,24 @@ services:
       - ENABLE_ALERTING=1
     volumes:
       - ./dist:/srv/grafana/plugins/pmm-app/dist
+      - ./dist:/usr/share/percona-dashboards/panels/pmm-app/dist
+      #- ../../grafana/public:/usr/share/grafana/public
     ports:
       - 80:80
     restart: always
 ```
 
-Please note, that we map the `./pmm-app/dist` folder as a subfolder of `/var/lib/grafana/plugins` so that front-end artifacts,
-i.e. panels and dashboards, can be picked up by grafana server running in the docker container.
+Please note, that we map the `./pmm-app/dist` folder as a subfolder of `/srv/grafana/plugins` so that front-end artifacts,
+i.e. panels and dashboards, can be picked up by grafana server running in the docker container. But json files are picked
+up from `/usr/share/percona-dashboards/panels`. If you want to pick up grafana front-end also you can uncomment mapping to
+`/usr/share/grafana/public` and check that your grafana located in `../../grafana` and built.
 
 Then to run it:
 
 ```bash
 cd pmm-app
-docker-compose -f ./docker-compose.local.yml up -d
-npm run dev
+docker-compose -f ./docker-compose.local.yaml up -d
+yarn run dev
 ```
 
 ## Submitting a Pull Request
